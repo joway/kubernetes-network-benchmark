@@ -1,0 +1,49 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: k8s-network-monitor
+  name: k8s-network-monitor
+  namespace: infra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-network-monitor
+  template:
+    metadata:
+      labels:
+        app: k8s-network-monitor
+    spec:
+      containers:
+      - args:
+        - ./bench/server.py
+        command:
+        - python
+        image: docker.in.ruguoapp.com/k8s-network-monitor:master-7e4d7b0
+        name: k8s-network-monitor
+        ports:
+        - containerPort: 9999
+          name: server
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+          readOnly: true
+      - args:
+        - ./bench/client.py
+        command:
+        - python
+        image: docker.in.ruguoapp.com/k8s-network-monitor:master-7e4d7b0
+        name: k8s-network-monitor
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: docker.in
+      volumes:
+      - hostPath:
+          path: /etc/localtime
+        name: localtime
